@@ -1,3 +1,4 @@
+import os
 import io
 import json
 import logging
@@ -457,8 +458,16 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             raise ValueError('Bad host key.')
 
         term = self.get_argument('term', u'') or u'xterm'
-        chan = ssh.invoke_shell(term=term)
+
+        chan = ssh.get_transport().open_session()
+        chan.set_environment_variable(
+            'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI',
+            os.environ.get('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'),
+        )
+        chan.get_pty(term)
+        chan.invoke_shell()
         chan.setblocking(0)
+
         worker = Worker(self.loop, ssh, chan, dst_addr)
         worker.encoding = options.encoding if options.encoding else \
             self.get_default_encoding(ssh)
