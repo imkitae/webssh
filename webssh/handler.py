@@ -460,10 +460,13 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         term = self.get_argument('term', u'') or u'xterm'
 
         chan = ssh.get_transport().open_session()
+        
+        logging.info('Set env AWS_CONTAINER_CREDENTIALS_RELATIVE_URI={}'.format(os.environ.get('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI')))
         chan.set_environment_variable(
             'AWS_CONTAINER_CREDENTIALS_RELATIVE_URI',
             os.environ.get('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'),
         )
+
         chan.get_pty(term)
         chan.invoke_shell()
         chan.setblocking(0)
